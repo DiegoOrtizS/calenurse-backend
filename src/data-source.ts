@@ -1,6 +1,6 @@
 // data-source.ts
 import { DataSource } from "typeorm";
-import { Usuario } from "./entity/Usuario";
+import { User } from "./entity/User";
 // Importa otras entidades según sea necesario
 
 export const AppDataSource = new DataSource({
@@ -10,7 +10,7 @@ export const AppDataSource = new DataSource({
     username: "tu_usuario",
     password: "tu_contraseña",
     database: "tu_base_de_datos",
-    entities: [Usuario],
+    entities: [User],
     synchronize: true,
     // Otras opciones según sea necesario
 });
