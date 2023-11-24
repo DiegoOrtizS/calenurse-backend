@@ -32,5 +32,5 @@ export async function updateRequirement(req: Request, res: Response): Promise<Re
 
 export async function deleteRequirement(req: Request, res: Response): Promise<Response> {
     const result = await AppDataSource.manager.delete(NurseRequirements, req.params.id);
-    return result.affected ? res.json({ message: 'Requerimiento deleted' }) : res.status(404).json({ message: 'Requerimiento not found' });
+    return result.affected ? res.json({ message: 'Requerimiento eliminado' }) : res.status(404).json({ message: 'Requerimiento not found' });
 }
