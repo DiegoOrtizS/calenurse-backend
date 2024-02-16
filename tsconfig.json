@@ -1,20 +1,12 @@
 {
-    "compilerOptions": {
-        "target": "es6",
-        "experimentalDecorators": true,
-        "emitDecoratorMetadata": true,
-        "module": "commonjs",
-        "lib": [
-            "es6"
-        ],
-        "outDir": "./dist",
-        "rootDir": "./src",
-        "strict": true,
-        "esModuleInterop": true,
-        "skipLibCheck": true,
-        "forceConsistentCasingInFileNames": true
-    },
-    "include": [
-        "src/**/*"
-    ]
+  "compilerOptions": {
+      "lib": ["es5", "es6", "dom"],
+      "target": "es5",
+      "module": "commonjs",
+      "moduleResolution": "node",
+      "emitDecoratorMetadata": true,
+      "experimentalDecorators": true,
+      "esModuleInterop": true,
+      "outDir": "./dist",
+  }
 }
