@@ -217,4 +217,6 @@ $RECYCLE.BIN/
 # app-data-source
 src/app-data-source.ts
 
+dist/
+
 # End of https://www.toptal.com/developers/gitignore/api/windows,macos,linux,node

@@ -1,37 +1,45 @@
 import { Router } from "express";
-import { Request, Response } from "express";
+import { Response } from "express";
 
 import { myDataSource } from "../../../app-data-source";
 import { CustomRequest, checkAuthHeader } from "../../../middleware/auth.middleware";
 import { DesiredShift, Nurse } from "../../../entity";
 import { Equal } from "typeorm";
+import { DateTime } from "luxon";
 
 const router = Router();
 
 router.post("/register", checkAuthHeader, async (req: CustomRequest, res: Response) => {
     try {
         const { date, shift } = req.body;
-        const [month, day, year] = date.split('/');
-        const parsedDate = new Date(`${year}-${month}-${day}`);
-        // funciona
-        parsedDate.setHours(parsedDate.getHours() + 5);    
+        
+        const parsedDate = DateTime.fromFormat(date, "dd/MM/yyyy");
+        const currentDate = DateTime.now();
+        if (parsedDate < currentDate) {
+            return res.status(400).json({ message: "Desired shift date should be equal or later than the current date" });
+        }
+
         const desiredShiftRepository = myDataSource.getRepository(DesiredShift);
         const nurseRepository = myDataSource.getRepository(Nurse);
         const nurse = await nurseRepository.findOneBy({ id: Equal(req.nurseId) });
+
+        const jsDate = parsedDate.toJSDate();
         const existingShift = await desiredShiftRepository.findOne({
             where: {
                 nurse: Equal(nurse.id),
-                date: parsedDate,
+                date: jsDate,
             },
         });
-        if (existingShift)
+
+        if (existingShift) {
             return res.status(409).json({ message: "Desired shift already exists" });
-        await desiredShiftRepository.save({ date: parsedDate, shift, nurse });
+        }
+
+        await desiredShiftRepository.save({ date: jsDate, shift, nurse });
         res.status(201).json({ message: "Desired shift registered successfully" });
     } catch (error) {
-        res.json({ message: "error", data: error });
+        res.status(500).json({ message: "Error", data: error.message || error });
     }
 });
-
 
 export default router;

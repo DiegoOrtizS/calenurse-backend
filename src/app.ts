@@ -3,6 +3,8 @@ import { AppDataSource } from './data-source';
 import * as UserController from './controller/UserController';
 import * as ScheduleController from './controller/ScheduleController';
 import * as RequirementsController from './controller/RequirementsController';
+import { TIMEZONE } from './utils/constants';
+import { Settings } from "luxon";
 
 AppDataSource.initialize().then(() => {
   const app = express();
@@ -36,6 +38,7 @@ AppDataSource.initialize().then(() => {
 
   // Start the server
   app.listen(PORT, () => {
+    Settings.defaultZoneName = TIMEZONE;
     console.log(`Server running on http://localhost:${PORT}`);
   });
 }).catch(error => console.log('Error during Data Source initialization', error));
