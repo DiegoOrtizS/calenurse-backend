@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, JoinColumn, ManyToOne, BeforeInsert, BeforeUpdate } from "typeorm"
+import { Entity, Column, PrimaryGeneratedColumn, JoinColumn, ManyToOne } from "typeorm"
 import { Nurse } from "./nurse.entity"
 import { UUID } from "typeorm/driver/mongodb/bson.typings"
 import { Shift } from "../types/shift.enum"

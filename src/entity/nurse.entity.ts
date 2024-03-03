@@ -1,4 +1,4 @@
-import { Entity, Column, ManyToOne, JoinColumn, PrimaryGeneratedColumn, Unique, OneToOne, OneToMany } from "typeorm"
+import { Entity, Column, ManyToOne, JoinColumn, PrimaryGeneratedColumn, OneToOne, OneToMany } from "typeorm"
 import { UUID } from "typeorm/driver/mongodb/bson.typings"
 import { Area } from "./area.entity";
 import { User } from "./user.entity";

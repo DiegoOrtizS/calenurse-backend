@@ -2,7 +2,7 @@ import { Router } from "express";
 import { Request, Response } from "express";
 import { myDataSource } from "../../../app-data-source";
 import { DesiredShift } from "../../../entity/desired_shift.entity";
-import { Between } from "typeorm";
+import { Between, Equal } from "typeorm";
 import Excel from 'exceljs';
 import * as path from 'path';
 import {PythonShell} from 'python-shell';
@@ -284,7 +284,38 @@ router.post("/generate-desired-shifts", async (req : Request, res : Response) =>
       
 });
 
+router.get("/schedule", async (req : Request, res : Response) => {
+    try {
+        const generatedShiftRepository = myDataSource.getRepository(GeneratedShift);
+        const nurseShifts = await generatedShiftRepository.find({
+            order: {
+                date: "ASC"
+            }
+        });
+        res.status(200).json({ message: "success", data: nurseShifts });
+    } catch (error) {
+        res.status(500).json({ message: "error", data: error });
+    }
+});
 
+
+router.get("/schedule/:nurseId", async (req : Request, res : Response) => {
+    try {
+        const generatedShiftRepository = myDataSource.getRepository(GeneratedShift);
+        const nurseId = req.params.nurseId;
+        const nurseShifts = await generatedShiftRepository.find({
+            where: {
+                nurse: Equal(nurseId)
+            },
+            order: {
+                date: "ASC"
+            }
+        });
+        res.status(200).json({ message: "success", data: nurseShifts });
+    } catch (error) {
+        res.status(500).json({ message: "error", data: error });
+    }
+});
 
 
 
