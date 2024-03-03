@@ -226,7 +226,7 @@ router.get("/get-id-nurses", async (req : Request, res : Response) => {
 });
 
 
-router.post("/generate-desired-sfhifts", async (req : Request, res : Response) => {
+router.post("/generate-desired-shifts", async (req : Request, res : Response) => {
     const {identificadores} = req.body;
     const matrizEnfermeras = [
         [ 1, 3, 3, 3, 1, 0, 3, 2 ],

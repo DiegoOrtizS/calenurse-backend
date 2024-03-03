@@ -9,7 +9,7 @@ export class DesiredShift {
     id: UUID
 
     @ManyToOne(() => Nurse, { nullable: false })
-    @JoinColumn({ name: "nurseId" })
+    @JoinColumn({ name: 'nurseId' })
     nurse: Nurse
 
     @Column({ nullable: false })
