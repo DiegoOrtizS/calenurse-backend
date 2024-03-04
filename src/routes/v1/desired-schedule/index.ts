@@ -2,7 +2,7 @@ import { Router } from "express";
 import { Response } from "express";
 
 import { myDataSource } from "../../../app-data-source";
-import { CustomRequest, checkAuthHeader } from "../../../middleware/auth.middleware";
+import { CustomRequest, checkAuthHeader, checkIsBoss } from "../../../middleware/auth.middleware";
 import { DesiredShift, Nurse } from "../../../entity";
 import { Equal } from "typeorm";
 import { DateTime } from "luxon";
@@ -53,13 +53,11 @@ router.put("/change-desired-schedule", checkAuthHeader, async (req: CustomReques
         }
 
         const desiredShiftRepository = myDataSource.getRepository(DesiredShift);
-        const nurseRepository = myDataSource.getRepository(Nurse);
-        const nurse = await nurseRepository.findOneBy({ id: Equal(req.nurseId) });
 
         const jsDate = parsedDate.toJSDate();
         const existingShift = await desiredShiftRepository.findOne({
             where: {
-                nurse: Equal(nurse.id),
+                nurse: Equal(req.nurseId),
                 date: jsDate,
             },
         });
@@ -72,6 +70,43 @@ router.put("/change-desired-schedule", checkAuthHeader, async (req: CustomReques
         existingShift.accepted = false;
         await desiredShiftRepository.save(existingShift);
         res.status(200).json({ message: "Desired shift updated successfully" });
+    } catch (error) {
+        res.status(500).json({ message: "Error", data: error.message || error });
+    }
+});
+
+router.put("/accept-desired-schedule/:scheduleId", checkIsBoss, async (req: CustomRequest, res: Response) => {
+    try {
+        const desiredShiftRepository = myDataSource.getRepository(DesiredShift);
+
+        const existingShift = await desiredShiftRepository.findOne({
+            where: {
+                id: Equal(req.params.scheduleId),
+            },
+        });
+
+        if (!existingShift) {
+            return res.status(404).json({ message: "Desired shift not found" });
+        }
+
+        existingShift.accepted = true;
+        await desiredShiftRepository.save(existingShift);
+        res.status(200).json({ message: "Desired shift accepted successfully" });
+    } catch (error) {
+        res.status(500).json({ message: "Error", data: error.message || error });
+    }
+});
+
+router.get("/desired-schedules", checkIsBoss, async (req: CustomRequest, res: Response) => {
+    try {
+        const desiredShiftRepository = myDataSource.getRepository(DesiredShift);
+        const desiredShifts = await desiredShiftRepository.find({
+            order: {
+                date: "ASC"
+            }
+        });
+
+        res.status(200).json({ data: desiredShifts });
     } catch (error) {
         res.status(500).json({ message: "Error", data: error.message || error });
     }
