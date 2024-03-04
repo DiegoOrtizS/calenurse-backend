@@ -42,4 +42,39 @@ router.post("/register", checkAuthHeader, async (req: CustomRequest, res: Respon
     }
 });
 
+router.post("/change-desired-schedule", checkAuthHeader, async (req: CustomRequest, res: Response) => {
+    try {
+        const { date, shift } = req.body;
+        
+        const parsedDate = DateTime.fromFormat(date, "dd/MM/yyyy");
+        const currentDate = DateTime.now();
+        if (parsedDate < currentDate) {
+            return res.status(400).json({ message: "Desired shift date should be equal or later than the current date" });
+        }
+
+        const desiredShiftRepository = myDataSource.getRepository(DesiredShift);
+        const nurseRepository = myDataSource.getRepository(Nurse);
+        const nurse = await nurseRepository.findOneBy({ id: Equal(req.nurseId) });
+
+        const jsDate = parsedDate.toJSDate();
+        const existingShift = await desiredShiftRepository.findOne({
+            where: {
+                nurse: Equal(nurse.id),
+                date: jsDate,
+            },
+        });
+
+        if (!existingShift) {
+            return res.status(404).json({ message: "Desired shift not found" });
+        }
+
+        existingShift.shift = shift;
+        existingShift.accepted = false;
+        await desiredShiftRepository.save(existingShift);
+        res.status(200).json({ message: "Desired shift updated successfully" });
+    } catch (error) {
+        res.status(500).json({ message: "Error", data: error.message || error });
+    }
+});
+
 export default router;

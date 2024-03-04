@@ -11,6 +11,7 @@ import fs from 'fs';
 import { Shift } from "../../../types/shift.enum";
 import { Nurse } from "../../../entity";
 import { GeneratedShift } from "../../../entity";
+import { CustomRequest, checkAuthHeader, checkIsBoss } from "../../../middleware/auth.middleware";
 
 
 config();
@@ -29,7 +30,7 @@ function obtenerFechasSemana(): Date[] {
     return fechasSemana;
   }
 
-router.post("/make", async (req : Request, res : Response) => {
+router.post("/make", checkAuthHeader, async (req : CustomRequest, res : Response) => {
     try {
         const {day, evening, night} = req.body;
         let date = new Date();
@@ -210,7 +211,7 @@ router.post("/make", async (req : Request, res : Response) => {
     }
 });
 
-router.get("/get-id-nurses", async (req : Request, res : Response) => {
+router.get("/get-id-nurses", checkIsBoss, async (req : CustomRequest, res : Response) => {
     try {
         const nurseRepository = myDataSource.getRepository(Nurse);
         const nurses = await nurseRepository.find();
@@ -226,7 +227,7 @@ router.get("/get-id-nurses", async (req : Request, res : Response) => {
 });
 
 
-router.post("/generate-desired-shifts", async (req : Request, res : Response) => {
+router.post("/generate-desired-shifts", checkAuthHeader, async (req : CustomRequest, res : Response) => {
     const {identificadores} = req.body;
     const matrizEnfermeras = [
         [ 1, 3, 3, 3, 1, 0, 3, 2 ],
@@ -284,7 +285,7 @@ router.post("/generate-desired-shifts", async (req : Request, res : Response) =>
       
 });
 
-router.get("/schedule", async (req : Request, res : Response) => {
+router.get("/schedules", checkAuthHeader, async (req : CustomRequest, res : Response) => {
     try {
         const generatedShiftRepository = myDataSource.getRepository(GeneratedShift);
         const nurseShifts = await generatedShiftRepository.find({
@@ -299,13 +300,12 @@ router.get("/schedule", async (req : Request, res : Response) => {
 });
 
 
-router.get("/schedule/:nurseId", async (req : Request, res : Response) => {
+router.get("/own-schedule", checkAuthHeader, async (req : CustomRequest, res : Response) => {
     try {
         const generatedShiftRepository = myDataSource.getRepository(GeneratedShift);
-        const nurseId = req.params.nurseId;
         const nurseShifts = await generatedShiftRepository.find({
             where: {
-                nurse: Equal(nurseId)
+                nurse: Equal(req.nurseId)
             },
             order: {
                 date: "ASC"

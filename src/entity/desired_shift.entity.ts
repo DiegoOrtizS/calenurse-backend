@@ -21,4 +21,7 @@ export class DesiredShift {
         nullable: false
     })
     shift: Shift
+
+    @Column({ default: false })
+    accepted: boolean
 }
