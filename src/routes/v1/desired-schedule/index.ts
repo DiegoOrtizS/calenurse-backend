@@ -42,7 +42,7 @@ router.post("/register", checkAuthHeader, async (req: CustomRequest, res: Respon
     }
 });
 
-router.post("/change-desired-schedule", checkAuthHeader, async (req: CustomRequest, res: Response) => {
+router.put("/change-desired-schedule", checkAuthHeader, async (req: CustomRequest, res: Response) => {
     try {
         const { date, shift } = req.body;
         
