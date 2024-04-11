@@ -5,6 +5,7 @@ import { TIMEZONE } from "./utils/constants"
 import { Settings } from "luxon";
 import http from 'http';
 import { WebSocketServer, WebSocket } from 'ws'
+import serverless from 'serverless-http';
 
 // establish database connection
 myDataSource
@@ -82,3 +83,5 @@ app.listen(3000, () => {
     Settings.defaultZoneName = TIMEZONE;
     console.log(`Server running on http://localhost:3000`);
 })
+
+module.exports.handler = serverless(app);
