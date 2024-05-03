@@ -4,6 +4,7 @@ import apiV1 from "./routes/v1"
 import { TIMEZONE } from "./utils/constants"
 import { Settings } from "luxon";
 import http from 'http';
+import cors from "cors"
 import { WebSocketServer, WebSocket } from 'ws'
 import serverless from 'serverless-http';
 
@@ -12,11 +13,11 @@ myDataSource
     .initialize()
     .then((r) => {
         console.log("Data Source has been initialized!")
-        //return r.synchronize()
+        return r.synchronize()
     })
-    /*.then((r) => {
+    .then((r) => {
         console.log("Data Source has been synchronized!")
-    })*/
+    })
     .catch((err) => {
         console.error("Error during Data Source initialization:", err)
     })
@@ -24,6 +25,7 @@ myDataSource
 // create and setup express app
 const app = express()
 app.use(express.json())
+app.use(cors())
 const server = http.createServer(app);
 
 const wss = new WebSocketServer({ server: server });

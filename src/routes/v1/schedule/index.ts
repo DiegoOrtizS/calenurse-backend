@@ -211,7 +211,7 @@ router.post("/make", checkAuthHeader, async (req : CustomRequest, res : Response
     }
 });
 
-router.get("/get-id-nurses", checkIsBoss, async (req : CustomRequest, res : Response) => {
+router.get("/get-id-nurses", async (req : CustomRequest, res : Response) => {
     try {
         const nurseRepository = myDataSource.getRepository(Nurse);
         const nurses = await nurseRepository.find();
