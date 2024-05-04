@@ -30,7 +30,7 @@ function obtenerFechasSemana(): Date[] {
     return fechasSemana;
   }
 
-router.post("/make", checkIsBoss, async (req : CustomRequest, res : Response) => {
+router.post("/make", checkAuthHeader, async (req : CustomRequest, res : Response) => {
     try {
         const {day, evening, night} = req.body;
         let date = new Date();

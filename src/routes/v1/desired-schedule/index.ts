@@ -75,7 +75,7 @@ router.put("/change-desired-schedule", checkAuthHeader, async (req: CustomReques
     }
 });
 
-router.put("/accept-desired-schedule/:scheduleId", checkIsBoss, async (req: CustomRequest, res: Response) => {
+router.put("/accept-desired-schedule/:scheduleId", checkAuthHeader, async (req: CustomRequest, res: Response) => {
     try {
         const desiredShiftRepository = myDataSource.getRepository(DesiredShift);
 
@@ -97,7 +97,7 @@ router.put("/accept-desired-schedule/:scheduleId", checkIsBoss, async (req: Cust
     }
 });
 
-router.get("/desired-schedules", checkIsBoss, async (req: CustomRequest, res: Response) => {
+router.get("/desired-schedules", checkAuthHeader, async (req: CustomRequest, res: Response) => {
     try {
         const desiredShiftRepository = myDataSource.getRepository(DesiredShift);
         const desiredShifts = await desiredShiftRepository.find({
