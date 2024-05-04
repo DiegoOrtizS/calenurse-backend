@@ -59,7 +59,7 @@ router.post("/make", checkAuthHeader, async (req : CustomRequest, res : Response
         const desiredShifts = await desiredShiftRepository.find({
             where: {
                 date: Between(monday, sunday),
-                nurse: In(nurseInSameArea)
+                nurse: In(nurseInSameArea.map(nurse => nurse.id))
             },
             relations: ["nurse"],
             order: {
