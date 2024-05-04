@@ -2,7 +2,7 @@ import { Router } from "express";
 import { Request, Response } from "express";
 import { myDataSource } from "../../../app-data-source";
 import { DesiredShift } from "../../../entity/desired_shift.entity";
-import { Between, Equal } from "typeorm";
+import { Between, Equal, In } from "typeorm";
 import Excel from 'exceljs';
 import * as path from 'path';
 import {PythonShell} from 'python-shell';
@@ -30,7 +30,7 @@ function obtenerFechasSemana(): Date[] {
     return fechasSemana;
   }
 
-router.post("/make", checkAuthHeader, async (req : CustomRequest, res : Response) => {
+router.post("/make", checkIsBoss, async (req : CustomRequest, res : Response) => {
     try {
         const {day, evening, night} = req.body;
         let date = new Date();
@@ -42,11 +42,19 @@ router.post("/make", checkAuthHeader, async (req : CustomRequest, res : Response
 
         const desiredShiftRepository = myDataSource.getRepository(DesiredShift);
         const nurseRepository = myDataSource.getRepository(Nurse);
+        const nurseBoss = await nurseRepository.findOneBy({ id: Equal(req.nurseId) });
         const generatedShiftRepository = myDataSource.getRepository(GeneratedShift);
-        // quiero obtener todos los turnos deseados de la semana de acuerdo al area
+
+        const nurseInSameArea = await nurseRepository.find({
+            where: {
+                area: Equal(nurseBoss.area)
+            }
+        });
+        // desired shifts of nurse in date between monday and sunday and that are in the same area
         const desiredShifts = await desiredShiftRepository.find({
             where: {
-                date: Between(monday, sunday)
+                date: Between(monday, sunday),
+                nurse: In(nurseInSameArea)
             },
             relations: ["nurse"],
             order: {
