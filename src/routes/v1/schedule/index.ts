@@ -43,8 +43,8 @@ router.post("/make", checkAuthHeader, async (req : CustomRequest, res : Response
         const desiredShiftRepository = myDataSource.getRepository(DesiredShift);
         const nurseRepository = myDataSource.getRepository(Nurse);
         const nurseBoss = await nurseRepository.findOneBy({ id: Equal(req.nurseId) });
-        console.log("NURSE BOSS");
-        console.log(nurseBoss);
+        // console.log("NURSE BOSS");
+        // console.log(nurseBoss);
         const generatedShiftRepository = myDataSource.getRepository(GeneratedShift);
 
         const nurseInSameArea = await nurseRepository.find({
@@ -53,8 +53,8 @@ router.post("/make", checkAuthHeader, async (req : CustomRequest, res : Response
                 isBoss: false
             }
         });
-        console.log("NURSE IN SAME AREA");
-        console.log(nurseInSameArea);
+        // console.log("NURSE IN SAME AREA");
+        // console.log(nurseInSameArea);
         // desired shifts of nurse in date between monday and sunday and that are in the same area
         const desiredShifts = await desiredShiftRepository.find({
             where: {
@@ -66,8 +66,8 @@ router.post("/make", checkAuthHeader, async (req : CustomRequest, res : Response
                 date: "ASC"
             },
         });
-        console.log("DESIRED SHIFTS");
-        console.log(desiredShifts);
+        // console.log("DESIRED SHIFTS");
+        // console.log(desiredShifts);
 
         if (desiredShifts.length === 0) {
             res.status(404).json({ message: "No hay turnos deseados para el area seleccionada" });
