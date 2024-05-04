@@ -97,6 +97,27 @@ router.put("/accept-desired-schedule/:scheduleId", checkAuthHeader, async (req: 
     }
 });
 
+router.delete("/delete-desired-schedule/:scheduleId", checkAuthHeader, async (req: CustomRequest, res: Response) => {
+    try {
+        const desiredShiftRepository = myDataSource.getRepository(DesiredShift);
+
+        const existingShift = await desiredShiftRepository.findOne({
+            where: {
+                id: Equal(req.params.scheduleId),
+            },
+        });
+
+        if (!existingShift) {
+            return res.status(404).json({ message: "Desired shift not found" });
+        }
+
+        await desiredShiftRepository.remove(existingShift);
+        res.status(200).json({ message: "Desired shift deleted successfully" });
+    } catch (error) {
+        res.status(500).json({ message: "Error", data: error.message || error });
+    }
+});
+
 router.get("/desired-schedules", checkAuthHeader, async (req: CustomRequest, res: Response) => {
     try {
         const desiredShiftRepository = myDataSource.getRepository(DesiredShift);
