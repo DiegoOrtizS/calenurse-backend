@@ -42,6 +42,7 @@ export const checkIsBoss = (req: CustomRequest, res: Response, next) => {
             } else {
                 const nurseRepository = myDataSource.getRepository(Nurse);
                 const nurse = await nurseRepository.findOneBy({ id: Equal(req.nurseId) });
+                console.log(nurse);
                 if (nurse.isBoss) {
                     req.nurseId = decode.nurseId;
                     next();
