@@ -48,7 +48,7 @@ router.post("/make", checkAuthHeader, async (req : CustomRequest, res : Response
 
         const nurseInSameArea = await nurseRepository.find({
             where: {
-                area: Equal(nurseBoss.area)
+                area: Equal(nurseBoss.area.id)
             }
         });
         console.log(nurseInSameArea);
