@@ -121,7 +121,19 @@ router.delete("/delete-desired-schedule/:scheduleId", checkAuthHeader, async (re
 router.get("/desired-schedules", checkAuthHeader, async (req: CustomRequest, res: Response) => {
     try {
         const desiredShiftRepository = myDataSource.getRepository(DesiredShift);
+        const nurseRepository = myDataSource.getRepository(Nurse);
+        const nurseBoss = await nurseRepository.findOneBy({ id: Equal(req.nurseId) });
+        const nurseInSameArea = await nurseRepository.find({
+            where: {
+                area: Equal(nurseBoss.area.id),
+                isBoss: false
+            }
+        });
         const desiredShifts = await desiredShiftRepository.find({
+            where: {
+                nurse: Equal(nurseInSameArea.map(nurse => nurse.id)),
+                accepted: false
+            },
             order: {
                 date: "ASC"
             }
