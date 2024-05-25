@@ -12,7 +12,7 @@ const router = express.Router();
 
 router.get('/assigned', async (req: CustomRequest<{}, GetShiftAssignedParams>, res: Response) => {
     try {
-      const { nurse_id } = req.params
+      const { nurse_id } = req.query
       const assignedShiftRepository = myDataSource.getRepository(GeneratedShift);
   
       const currentWeekStart = startOfWeek(new Date(), { weekStartsOn: 1 }); // Inicio de la semana (lunes)
