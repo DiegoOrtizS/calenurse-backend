@@ -93,8 +93,11 @@ router.post('/generate', async (req: CustomRequest<PostShiftGenerateBody>, res: 
     const desiredShifts = await desiredShiftRepository.find({
         where: {
           date: Between(currentWeekStart, currentWeekEnd),
-          nurse: { id: Equal(nurse_id), area: Equal(nurse.area) }
+          nurse: { id: Equal(nurse_id), area: {
+            id: Equal(nurse.area.id)
+          } }
         },
+        relations: ['nurse'],
     });
 
     if(desiredShifts.length === 0) {
@@ -110,7 +113,7 @@ router.post('/generate', async (req: CustomRequest<PostShiftGenerateBody>, res: 
       await generatedShiftRepoitory.save(generatedShiftRepoitory.create({
         nurse: desiredShift.nurse,
         date: desiredShift.date,
-        shift: desiredShift.shift
+        shift: desiredShift.shift,
       }))
     }
 
