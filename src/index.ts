@@ -7,6 +7,8 @@ import http from 'http';
 import cors from "cors"
 import { WebSocketServer, WebSocket } from 'ws'
 import serverless from 'serverless-http';
+import { loadDefaultValuesIfNeeded } from "./fixtures";
+
 
 // establish database connection
 myDataSource
@@ -17,6 +19,10 @@ myDataSource
     })
     .then((r) => {
         console.log("Data Source has been synchronized!")
+        return loadDefaultValuesIfNeeded()
+    })
+    .then(() => {
+        console.log("Valores por defecto cargados correctamente (si era necesario)");
     })
     .catch((err) => {
         console.error("Error during Data Source initialization:", err)

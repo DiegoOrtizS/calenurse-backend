@@ -7,21 +7,15 @@ import { Shift } from "../types/shift.enum"
 export class DesiredShift {
     @PrimaryGeneratedColumn("uuid")
     id: UUID
-
     @ManyToOne(() => Nurse, { nullable: false })
     @JoinColumn({ name: 'nurseId' })
     nurse: Nurse
-
     @Column({ nullable: false })
     date: Date
-
     @Column({
         type: "enum",
         enum: Shift,
         nullable: false
     })
     shift: Shift
-
-    @Column({ default: false })
-    accepted: boolean
 }
