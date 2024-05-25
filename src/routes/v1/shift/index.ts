@@ -6,33 +6,36 @@ import { Equal, Between } from "typeorm";
 import { DesiredShift, GeneratedShift, Nurse } from "../../../entity";
 import startOfWeek from 'date-fns/startOfWeek';
 import endOfWeek from 'date-fns/endOfWeek';
+import startOfDay from 'date-fns/startOfDay';
+import endOfDay from 'date-fns/endOfDay';
+import { format, parseISO } from 'date-fns';
+
 
 const router = express.Router();
 
-
 router.get('/assigned', async (req: CustomRequest<{}, GetShiftAssignedParams>, res: Response) => {
-    try {
-      const { nurse_id } = req.query
-      const assignedShiftRepository = myDataSource.getRepository(GeneratedShift);
-  
-      const currentWeekStart = startOfWeek(new Date(), { weekStartsOn: 1 }); // Inicio de la semana (lunes)
-      const currentWeekEnd = endOfWeek(new Date(), { weekStartsOn: 1 }); // Fin de la semana (domingo)
-  
-      const assignedShifts = await assignedShiftRepository.find({
-        where: {
-          date: Between(currentWeekStart, currentWeekEnd),
-          nurse: { id: Equal(nurse_id) }, // Filtrar por nurse_id
-        },
-        relations: ['nurse'], // Cargar la relación con Nurse
-      });
-  
-      res.json(assignedShifts);
-    } catch (e) {
-      console.error(e);
-      res.status(500).json({ error: 'INTERNAL_SERVER_ERROR' });
-    }
-  });
+  try {
+    const { nurse_id, date } = req.query;
 
+    const assignedShiftRepository = myDataSource.getRepository(GeneratedShift);
+
+
+    const parsed_date = startOfDay(parseISO(date));
+
+    const assignedShifts = await assignedShiftRepository.find({
+      where: {
+        date: Equal(parsed_date),
+        nurse: { id: Equal(nurse_id) },
+      },
+      relations: ['nurse'],
+    });
+
+    res.json(assignedShifts);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'INTERNAL_SERVER_ERROR' });
+  }
+});
 
 router.post('/desired', async (req: CustomRequest<PostShiftDesiredBody>, res: Response) => {
   try {
@@ -40,26 +43,23 @@ router.post('/desired', async (req: CustomRequest<PostShiftDesiredBody>, res: Re
     const desiredShiftRepository = myDataSource.getRepository(DesiredShift);
     const nurseRepository = myDataSource.getRepository(Nurse);
 
-    // Check if a desired shift already exists for the given date and nurse
+    const desiredDate = startOfDay(new Date(date));
+
     const existingRule = await desiredShiftRepository.findOne({
-      where: { date: Equal(date), nurse: {
-        id: Equal(nurse_id)
-      } }
+      where: { date: Equal(desiredDate), nurse: { id: Equal(nurse_id) } }
     });
     if (existingRule) {
       res.status(400).json({ error: "DESIRED_SHIFT_ALREADY_EXISTS" });
-      return
+      return;
     }
 
-    // Check if the nurse exists
     const nurse = await nurseRepository.findOneBy({ id: Equal(nurse_id) });
     if (!nurse) {
       res.status(404).json({ error: "NURSE_NOT_FOUND" });
-      return
+      return;
     }
 
-    // Save the desired shift
-    const newDesiredShift = desiredShiftRepository.create({ date, shift, nurse });
+    const newDesiredShift = desiredShiftRepository.create({ date: desiredDate, shift, nurse });
     await desiredShiftRepository.save(newDesiredShift);
 
     res.status(201).json({ message: "Desired shift registered successfully" });
@@ -71,50 +71,46 @@ router.post('/desired', async (req: CustomRequest<PostShiftDesiredBody>, res: Re
 
 router.post('/generate', async (req: CustomRequest<PostShiftGenerateBody>, res: Response) => {
   try {
-    const { nurse_id, morning, afternoon, night } = req.body;
+    const { nurse_id } = req.body;
     const desiredShiftRepository = myDataSource.getRepository(DesiredShift);
-    const generatedShiftRepoitory = myDataSource.getRepository(GeneratedShift)
+    const generatedShiftRepository = myDataSource.getRepository(GeneratedShift);
     const nurseRepository = myDataSource.getRepository(Nurse);
 
-    // Check if a desired shift already exists for the given date and nurse
     const nurse = await nurseRepository.findOne({
-      where: {
-        id: Equal(nurse_id),
-        isBoss: Equal(true)
-      }
-    })
+      where: { id: Equal(nurse_id), isBoss: Equal(true) },
+      relations: ['area']
+    });
     if (!nurse) {
       res.status(403).json({ error: "MUST_BE_A_BOSS_NURSE" });
-      return
+      return;
     }
-    const currentWeekStart = startOfWeek(new Date(), { weekStartsOn: 1 }); // Inicio de la semana (lunes)
-    const currentWeekEnd = endOfWeek(new Date(), { weekStartsOn: 1 }); // Fin de la semana (domingo)
+
+    const currentWeekStart = startOfDay(startOfWeek(new Date(), { weekStartsOn: 1 }));
+    const currentWeekEnd = endOfDay(endOfWeek(new Date(), { weekStartsOn: 1 }));
 
     const desiredShifts = await desiredShiftRepository.find({
-        where: {
-          date: Between(currentWeekStart, currentWeekEnd),
-          nurse: { id: Equal(nurse_id), area: {
-            id: Equal(nurse.area.id)
-          } }
-        },
-        relations: ['nurse'],
+      where: {
+        date: Between(currentWeekStart, currentWeekEnd),
+        nurse: { area: { id: Equal(nurse.area.id) } }
+      },
+      relations: ['nurse'],
     });
 
-    if(desiredShifts.length === 0) {
+    if (desiredShifts.length === 0) {
       res.status(403).json({ error: "DONT_HAVE_DESIRED_SHIFTS" });
-      return
+      return;
     }
 
-    await generatedShiftRepoitory.delete({
+    await generatedShiftRepository.delete({
       date: Between(currentWeekStart, currentWeekEnd),
-    })
+    });
 
-    for(let desiredShift of desiredShifts) {
-      await generatedShiftRepoitory.save(generatedShiftRepoitory.create({
+    for (let desiredShift of desiredShifts) {
+      await generatedShiftRepository.save(generatedShiftRepository.create({
         nurse: desiredShift.nurse,
-        date: desiredShift.date,
+        date: startOfDay(desiredShift.date),
         shift: desiredShift.shift,
-      }))
+      }));
     }
 
     res.status(201).json({ message: "Shift generated successfully" });
@@ -123,4 +119,5 @@ router.post('/generate', async (req: CustomRequest<PostShiftGenerateBody>, res: 
     res.status(500).json({ error: "INTERNAL_SERVER_ERROR" });
   }
 });
+
 export default router;
