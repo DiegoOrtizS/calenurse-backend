@@ -2,7 +2,7 @@ import express, { Response } from "express";
 import { GetShiftAssignedParams, PostShiftDesiredBody, PostShiftGenerateBody } from "./dto";
 import { CustomRequest } from "../../../types/custom_request";
 import { myDataSource } from "../../../app-data-source";
-import { Equal, Between } from "typeorm";
+import { Equal, Between, MoreThanOrEqual } from "typeorm";
 import { DesiredShift, GeneratedShift, Nurse } from "../../../entity";
 import startOfWeek from 'date-fns/startOfWeek';
 import endOfWeek from 'date-fns/endOfWeek';
@@ -13,6 +13,35 @@ import { GetShiftAreaParams } from "./dto/params/get_shift_area.params";
 
 
 const router = express.Router();
+
+router.get('/get-assigned-shifts-from-date', async (req: CustomRequest<{}, GetShiftAssignedParams>, res: Response) => {
+  try {
+    const { nurse_id, date } = req.query;
+
+    const assignedShiftRepository = myDataSource.getRepository(GeneratedShift);
+
+    const parsed_date = startOfDay(parseISO(date));
+
+    const assignedShifts = await assignedShiftRepository.find({
+      where: {
+        date: MoreThanOrEqual(parsed_date),
+        nurse: { id: Equal(nurse_id) },
+      },
+      relations: ['nurse'],
+    });
+
+    const shifts = assignedShifts.map((shift) => ({
+      id: shift.id,
+      date: shift.date,
+      shift: shift.shift
+    }))
+
+    res.json(shifts);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'INTERNAL_SERVER_ERROR' });
+  }
+});
 
 router.get('/assigned', async (req: CustomRequest<{}, GetShiftAssignedParams>, res: Response) => {
   try {
