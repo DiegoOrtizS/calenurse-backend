@@ -9,6 +9,7 @@ import endOfWeek from 'date-fns/endOfWeek';
 import startOfDay from 'date-fns/startOfDay';
 import endOfDay from 'date-fns/endOfDay';
 import { format, parseISO } from 'date-fns';
+import { GetShiftAreaParams } from "./dto/params/get_shift_area.params";
 
 
 const router = express.Router();
@@ -31,6 +32,57 @@ router.get('/assigned', async (req: CustomRequest<{}, GetShiftAssignedParams>, r
     });
 
     res.json(assignedShifts);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: 'INTERNAL_SERVER_ERROR' });
+  }
+});
+
+router.get('/area', async (req: CustomRequest<{}, GetShiftAreaParams>, res: Response) => {
+  try {
+    const { boss_id, date } = req.query;
+
+    const assignedShiftRepository = myDataSource.getRepository(GeneratedShift);
+    const nurseShiftRepository = myDataSource.getRepository(Nurse);
+
+    const boss = await nurseShiftRepository.findOne(
+      {
+        where: {
+          id: Equal(boss_id),
+          isBoss: Equal(true)
+        },
+      }
+    )
+
+    if(!boss) {
+      res.status(404).json({ error: "NURSE_NOT_A_BOSS" });
+      return;
+    }
+
+
+    const parsed_date = startOfDay(parseISO(date));
+
+    const assignedShifts = await assignedShiftRepository.find({
+      where: {
+        date: Equal(parsed_date),
+        nurse: {
+          area: {
+            id: Equal(boss.area.id)
+          }
+        }
+      },
+      relations: ['nurse'],
+    });
+    const shiftsByType = assignedShifts.reduce((acc, shift) => {
+      const type = shift.shift;
+      if (!acc[type]) {
+        acc[type] = [];
+      }
+      acc[type].push(shift);
+      return acc;
+    }, {});
+
+    res.json(shiftsByType);
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'INTERNAL_SERVER_ERROR' });
