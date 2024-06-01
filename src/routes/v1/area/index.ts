@@ -3,7 +3,7 @@ import { CustomRequest } from "../../../types/custom_request";
 import { myDataSource } from "../../../app-data-source";
 import { Area } from "../../../entity";
 import { GetAreaNursesParams } from "./dto";
-import { Equal } from "typeorm";
+import { Equal, Not } from "typeorm";
 
 const router = express.Router();
 
@@ -22,7 +22,7 @@ router.get('/all', async (req: CustomRequest<{}, {}>, res: Response) => {
 
 router.get('/nurses', async (req: CustomRequest<{}, GetAreaNursesParams>, res: Response) => {
   try {
-    const { area_id } = req.query;
+    const { area_id, user_id } = req.query;
 
     const areaRepository = myDataSource.getRepository(Area)
     const area = await areaRepository.findOne(
@@ -30,7 +30,8 @@ router.get('/nurses', async (req: CustomRequest<{}, GetAreaNursesParams>, res: R
         where : {
           id: Equal(area_id),
           nurses: {
-            isBoss: Equal(false)
+            isBoss: Equal(false),
+            id: Not(user_id)
           }
         },
         relations: ['nurses'],
