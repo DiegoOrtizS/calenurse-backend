@@ -79,7 +79,7 @@ router.get('/area', async (req: CustomRequest<{}, GetShiftAreaParams>, res: Resp
       if (!acc[type]) {
         acc[type] = [];
       }
-      acc[type].push(shift.nurse);
+      acc[type].push(shift.nurse.name);
       return acc;
     }, {})).map(([shiftType, nurses]) => ({ shiftType, nurses }));
 
