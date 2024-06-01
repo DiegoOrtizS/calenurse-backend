@@ -84,17 +84,6 @@ router.get('/area', async (req: CustomRequest<{}, GetShiftAreaParams>, res: Resp
     }, {})).map(([shiftType, nurses]) => ({ shiftType, nurses }));
 
     res.json(nursesByShiftTypeArray);
-
-    // const shiftsByType = assignedShifts.reduce((acc, shift) => {
-    //   const type = shift.shift;
-    //   if (!acc[type]) {
-    //     acc[type] = [];
-    //   }
-    //   acc[type].push(shift);
-    //   return acc;
-    // }, {});
-
-    // res.json(shiftsByType);
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'INTERNAL_SERVER_ERROR' });
