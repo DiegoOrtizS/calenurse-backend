@@ -74,16 +74,16 @@ router.get('/area', async (req: CustomRequest<{}, GetShiftAreaParams>, res: Resp
       relations: ['nurse'],
     });
 
-    const shiftsByTypeArray = Object.entries(assignedShifts.reduce((acc, shift) => {
+    const nursesByShiftTypeArray = Object.entries(assignedShifts.reduce((acc, shift) => {
       const type = shift.shift;
       if (!acc[type]) {
         acc[type] = [];
       }
-      acc[type].push(shift);
+      acc[type].push(shift.nurse);
       return acc;
-    }, {})).map(([shiftType, shifts]) => ({ shiftType, shifts }));
+    }, {})).map(([shiftType, nurses]) => ({ shiftType, nurses }));
 
-    res.json(shiftsByTypeArray);
+    res.json(nursesByShiftTypeArray);
 
     // const shiftsByType = assignedShifts.reduce((acc, shift) => {
     //   const type = shift.shift;
