@@ -132,13 +132,13 @@ router.post('/exchange', async (req: CustomRequest<PostShiftExchangeBody, {}>, r
 
     const shiftA = await generattedShiftRepository.findOne({
       where: {
-        id: shift_a
+        id: Equal(shift_a)
       }
     });
 
     const shiftB = await generattedShiftRepository.findOne({
       where: {
-        id: shift_b
+        id: Equal(shift_b)
       }
     });
 
