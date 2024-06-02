@@ -21,10 +21,12 @@ router.get('/get-assigned-shifts-from-date', async (req: CustomRequest<{}, GetSh
     const assignedShiftRepository = myDataSource.getRepository(GeneratedShift);
 
     const parsed_date = startOfDay(parseISO(date));
+    const currentWeekEnd = endOfDay(endOfWeek(parsed_date, { weekStartsOn: 1 }));
+
 
     const assignedShifts = await assignedShiftRepository.find({
       where: {
-        date: MoreThanOrEqual(parsed_date),
+        date: Between(parsed_date, currentWeekEnd),
         nurse: { id: Equal(nurse_id) },
       },
       relations: ['nurse'],
