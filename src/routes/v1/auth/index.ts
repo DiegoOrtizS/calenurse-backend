@@ -34,7 +34,7 @@ router.post('/signup', async (req: Request, res: Response) => {
         const userRepository = myDataSource.getRepository(User);
         const userExists = await userRepository.findOne({ where: { username } });
         if (userExists)
-            return res.status(409).json({ message: 'User already exists' });
+            return res.status(409).json({ message: 'Usuario ya registrado' });
         const nurseRepository = myDataSource.getRepository(Nurse);
         const areaRepository = myDataSource.getRepository(Area);
         const area = await areaRepository.findOneBy({ id: areaId });
