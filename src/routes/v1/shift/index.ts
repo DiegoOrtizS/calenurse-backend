@@ -235,6 +235,73 @@ router.get('/exchange', async (req: CustomRequest<{}, GetShiftExchangeParams>, r
   }
 });
 
+router.put('/exchange/accept', async (req: CustomRequest<{ exchange_id: string }, {}>, res: Response) => {
+  try {
+    const { exchange_id } = req.body;
+    const shiftExchangeRepository = myDataSource.getRepository(ShiftExchange);
+    const generatedShiftRepository = myDataSource.getRepository(GeneratedShift);
+
+    const exchange = await shiftExchangeRepository.findOne({
+      where: { id: Equal(exchange_id), state: Equal(true) },
+      relations: ['shiftA', 'shiftB', 'shiftA.nurse', 'shiftB.nurse']
+    });
+
+    if (!exchange) {
+      res.status(404).json({ error: "EXCHANGE_NOT_FOUND" });
+      return;
+    }
+
+    const { shiftA, shiftB } = exchange;
+
+    console.log(shiftA, shiftB)
+
+    // Intercambiar las enfermeras en los horarios
+    const tempNurse = shiftA.nurse;
+    shiftA.nurse = shiftB.nurse;
+    shiftB.nurse = tempNurse;
+
+    console.log(shiftA, shiftB)
+
+
+    // Actualizar el estado del intercambio a false
+    exchange.state = false;
+
+    await generatedShiftRepository.save([shiftA, shiftB]);
+    await shiftExchangeRepository.save(exchange);
+
+    res.status(200).json({ message: "EXCHANGE_ACCEPTED" });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "INTERNAL_SERVER_ERROR" });
+  }
+});
+
+router.put('/exchange/decline', async (req: CustomRequest<{ exchange_id: string }, {}>, res: Response) => {
+  try {
+    const { exchange_id } = req.body;
+    const shiftExchangeRepository = myDataSource.getRepository(ShiftExchange);
+
+    const exchange = await shiftExchangeRepository.findOne({
+      where: { id: Equal(exchange_id), state: Equal(true) }
+    });
+
+    if (!exchange) {
+      res.status(404).json({ error: "EXCHANGE_NOT_FOUND" });
+      return;
+    }
+
+    // Actualizar el estado del intercambio a false
+    exchange.state = false;
+
+    await shiftExchangeRepository.save(exchange);
+
+    res.status(200).json({ message: "EXCHANGE_DECLINED" });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "INTERNAL_SERVER_ERROR" });
+  }
+});
+
 router.post('/desired', async (req: CustomRequest<PostShiftDesiredBody>, res: Response) => {
   try {
     const { date, nurse_id, shift } = req.body;
