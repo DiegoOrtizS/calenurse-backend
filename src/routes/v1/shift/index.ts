@@ -10,6 +10,9 @@ import startOfDay from 'date-fns/startOfDay';
 import endOfDay from 'date-fns/endOfDay';
 import { format, parseISO } from 'date-fns';
 import { GetShiftAreaParams } from "./dto/params/get_shift_area.params";
+import { PostShiftExchangeBody } from "./dto/body/post_shift_exchange.body";
+import { ShiftExchange } from "../../../entity/shift_exchange.entity";
+import { GetShiftExchangeParams } from "./dto/params/get_shift_exchange.params";
 
 
 const router = express.Router();
@@ -118,6 +121,117 @@ router.get('/area', async (req: CustomRequest<{}, GetShiftAreaParams>, res: Resp
   } catch (e) {
     console.error(e);
     res.status(500).json({ error: 'INTERNAL_SERVER_ERROR' });
+  }
+});
+
+router.post('/exchange', async (req: CustomRequest<PostShiftExchangeBody, {}>, res: Response) => {
+  try {
+    const { shift_a, shift_b } = req.body;
+    const shiftEchangeRepository = myDataSource.getRepository(ShiftExchange);
+    const generattedShiftRepository = myDataSource.getRepository(GeneratedShift);
+
+    const shiftA = await generattedShiftRepository.findOne({
+      where: {
+        id: shift_a
+      }
+    });
+
+    const shiftB = await generattedShiftRepository.findOne({
+      where: {
+        id: shift_b
+      }
+    });
+
+    if (!shiftA || !shiftB) {
+      return res.status(404).json({ error: "Shift not found" });
+    }
+
+    // Buscar si ya existe un intercambio de turnos entre los dos turnos especificados
+    const existingExchange = await shiftEchangeRepository.find({
+      where: [
+        { shiftA: Equal(shiftA.id), shiftB: Equal(shiftB.id), state: Equal(true) },
+        { shiftA: Equal(shiftB.id), shiftB: Equal(shiftA.id), state: Equal(true) }
+      ]
+    });
+    
+    console.log(existingExchange)
+
+    if (existingExchange.length) {
+      return res.status(400).json({ error: "Shift exchange already exists" });
+    }
+
+    const newShiftExchange = shiftEchangeRepository.create({
+      shiftA: shiftA,
+      shiftB: shiftB,
+      state: true
+    });
+
+    await shiftEchangeRepository.save(newShiftExchange);
+
+    return res.status(201).json({ message: "Shift exchange registered successfully" });
+  } catch (e) {
+    console.error(e);
+    return res.status(500).json({ error: "INTERNAL_SERVER_ERROR" });
+  }
+});
+
+
+router.get('/exchange', async (req: CustomRequest<{}, GetShiftExchangeParams>, res: Response) => {
+  try {
+    const { nurse_id } = req.query;
+    console.log(nurse_id);
+    const shiftExchangeRepository = myDataSource.getRepository(ShiftExchange);
+    const nurseRepository = myDataSource.getRepository(Nurse);
+
+    const nurse = await nurseRepository.findOne({
+      where: { id: Equal(nurse_id), isBoss: Equal(true) },
+      relations: ['area']
+    });
+    if (!nurse) {
+      res.status(403).json({ error: "MUST_BE_A_BOSS_NURSE" });
+      return;
+    }
+
+    const shiftsExchange = await shiftExchangeRepository.find({
+      where: {
+        state: Equal(true),
+        shiftA: {
+          nurse: {
+            area: {
+              id: Equal(nurse.area.id)
+            }
+          }
+        },
+        shiftB: {
+          nurse: {
+            area: {
+              id: Equal(nurse.area.id)
+            }
+          }
+        }
+      },
+      relations: ['shiftA', 'shiftA.nurse', 'shiftB', 'shiftB.nurse']
+    });
+
+    const mappedShiftsExchange = shiftsExchange.map(exchange => ({
+      id: exchange.id,
+      state: exchange.state,
+      shiftA: {
+        date: exchange.shiftA.date,
+        shift: exchange.shiftA.shift,
+        nurseName: exchange.shiftA.nurse.name
+      },
+      shiftB: {
+        date: exchange.shiftB.date,
+        shift: exchange.shiftB.shift,
+        nurseName: exchange.shiftB.nurse.name
+      }
+    }));
+
+    res.status(200).json(mappedShiftsExchange);
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "INTERNAL_SERVER_ERROR" });
   }
 });
 
