@@ -8,7 +8,7 @@ export class GeneratedShift {
     @PrimaryGeneratedColumn("uuid")
     id: UUID
 
-    @ManyToOne(() => Nurse, { nullable: false })
+    @ManyToOne(() => Nurse, { nullable: false, onDelete: "CASCADE" })
     @JoinColumn({ name: "nurseId" })    
     nurse: Nurse
 

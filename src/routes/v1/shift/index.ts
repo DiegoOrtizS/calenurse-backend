@@ -342,12 +342,14 @@ router.post('/generate', async (req: CustomRequest<PostShiftGenerateBody>, res: 
     const { nurse_id } = req.body;
     const desiredShiftRepository = myDataSource.getRepository(DesiredShift);
     const generatedShiftRepository = myDataSource.getRepository(GeneratedShift);
+
     const nurseRepository = myDataSource.getRepository(Nurse);
 
     const nurse = await nurseRepository.findOne({
       where: { id: Equal(nurse_id), isBoss: Equal(true) },
       relations: ['area']
     });
+
     if (!nurse) {
       res.status(403).json({ error: "MUST_BE_A_BOSS_NURSE" });
       return;
@@ -369,14 +371,17 @@ router.post('/generate', async (req: CustomRequest<PostShiftGenerateBody>, res: 
       return;
     }
 
-    await generatedShiftRepository.delete({
-      date: Between(currentWeekStart, currentWeekEnd),
-      nurse: {
-        area : {
-          id: Equal(nurse.area.id)
-        }
-      }
-    });
+    await generatedShiftRepository.createQueryBuilder()
+    .delete()
+    .from(GeneratedShift)
+    .where('date BETWEEN :startDate AND :endDate', {
+      startDate: currentWeekStart,
+      endDate: currentWeekEnd
+    })
+    .andWhere('"nurseId" IN (SELECT "id" FROM "nurse" WHERE "areaId" = :areaId)', {
+      areaId: nurse.area.id
+    })
+    .execute();
 
     for (let desiredShift of desiredShifts) {
       await generatedShiftRepository.save(generatedShiftRepository.create({

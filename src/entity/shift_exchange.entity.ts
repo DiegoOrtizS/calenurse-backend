@@ -7,11 +7,11 @@ export class ShiftExchange {
     @PrimaryGeneratedColumn("uuid")
     id: UUID
 
-    @ManyToOne(() => GeneratedShift, { nullable: false })
+    @ManyToOne(() => GeneratedShift, { nullable: false, onDelete: "CASCADE" })
     @JoinColumn({ name: "shiftA" })    
     shiftA: GeneratedShift
 
-    @ManyToOne(() => GeneratedShift, { nullable: false })
+    @ManyToOne(() => GeneratedShift, { nullable: false, onDelete: "CASCADE" })
     @JoinColumn({ name: "shiftB" })    
     shiftB: GeneratedShift
 
