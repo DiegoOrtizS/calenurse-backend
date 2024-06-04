@@ -372,7 +372,9 @@ router.post('/generate', async (req: CustomRequest<PostShiftGenerateBody>, res: 
     await generatedShiftRepository.delete({
       date: Between(currentWeekStart, currentWeekEnd),
       nurse: {
-        id: Equal(nurse.id)
+        area : {
+          id: Equal(nurse.area.id)
+        }
       }
     });
 
