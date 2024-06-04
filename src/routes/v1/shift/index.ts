@@ -142,8 +142,11 @@ router.post('/exchange', async (req: CustomRequest<PostShiftExchangeBody, {}>, r
       }
     });
 
-    if (!shiftA || !shiftB) {
-      return res.status(404).json({ error: "Shift not found" });
+    if (!shiftA) {
+      return res.status(404).json({ error: "ShiftA not found" });
+    }
+    if (!shiftB) {
+      return res.status(404).json({ error: "ShiftB not found" });
     }
 
     // Buscar si ya existe un intercambio de turnos entre los dos turnos especificados
